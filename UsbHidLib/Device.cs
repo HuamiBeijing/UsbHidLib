@@ -13,13 +13,6 @@ namespace UsbHidLib
       /* stream */
       private FileStream _fileStream;
 
-      /* stream */
-      public FileStream fileStream
-      {
-         get { return _fileStream; }
-         internal set { _fileStream = value; }
-      }
-
       /* dispose */
       public void Dispose()
       {
@@ -69,6 +62,21 @@ namespace UsbHidLib
          _fileStream.Write(data, 0, data.Length);
          /* flush! */
          _fileStream.Flush();
+      }
+
+      public ushort GetPreparsedPacketSize()
+      {
+         IntPtr preparsed = IntPtr.Zero;
+         if (!Native.HidD_GetPreparsedData(_shandle, ref preparsed))
+         {
+            return 0;
+         }
+
+         var caps = new HIDP_CAPS();
+         Native.HidP_GetCaps(preparsed, ref caps);
+         var res = caps.InputReportByteLength;
+         Native.HidD_FreePreparsedData(ref preparsed);
+         return res;
       }
 
       /* read record */

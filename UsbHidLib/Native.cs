@@ -94,17 +94,17 @@ namespace UsbHidLib
 
       /* gets hid device attributes */
       [DllImport("hid.dll", SetLastError = true)]
-      public static extern Boolean HidD_GetAttributes(SafeFileHandle hFile,
+      public static extern Boolean HidD_GetAttributes(IntPtr hFile,
           ref HiddAttributtes attributes);
 
       /* gets usb manufacturer string */
       [DllImport("hid.dll", CharSet = CharSet.Auto, SetLastError = true)]
-      public static extern Boolean HidD_GetManufacturerString(SafeFileHandle hFile,
+      public static extern Boolean HidD_GetManufacturerString(IntPtr hFile,
           StringBuilder buffer, Int32 bufferLength);
 
       /* gets product string */
       [DllImport("hid.dll", CharSet = CharSet.Auto, SetLastError = true)]
-      public static extern Boolean HidD_GetProductString(SafeFileHandle hFile,
+      public static extern Boolean HidD_GetProductString(IntPtr hFile,
           StringBuilder buffer, Int32 bufferLength);
 
       /* gets serial number string */
@@ -121,11 +121,21 @@ namespace UsbHidLib
       internal static extern bool HidD_FreePreparsedData(ref IntPtr preparsedData);
 
       [DllImport("hid.dll", SetLastError = true)]
-      private static extern int HidP_GetCaps(
+      internal static extern int HidP_GetCaps(
           IntPtr preparsedData,					// IN PHIDP_PREPARSED_DATA  PreparsedData,
-          ref HIDP_CAPS myPHIDP_CAPS);				// OUT PHIDP_CAPS  Capabilities
+          ref HIDP_CAPS hidCaps);				// OUT PHIDP_CAPS  Capabilities
 
+      [DllImport("hid.dll", SetLastError = true, CallingConvention = CallingConvention.StdCall)]
+      internal static extern bool HidD_GetFeature(
+         IntPtr hDevice,
+         IntPtr hReportBuffer,
+         uint reportBufferLength);
 
+      [DllImport("hid.dll", SetLastError = true, CallingConvention = CallingConvention.StdCall)]
+      internal static extern bool HidD_SetFeature(
+         IntPtr hDevice,
+         IntPtr reportBuffer,
+         uint reportBufferLength);
       #endregion
       #region setupapi.dll
 
