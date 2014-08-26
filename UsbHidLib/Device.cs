@@ -8,7 +8,8 @@ namespace UsbHidLib
    {
 
       /* device handle */
-      private IntPtr handle;
+      readonly SafeFileHandle _shandle;
+
       /* stream */
       private FileStream _fileStream;
 
@@ -32,17 +33,14 @@ namespace UsbHidLib
          }
 
          /* close handle */
-         Native.CloseHandle(handle);
+         _shandle.Dispose();
       }
 
       /* open hid device */
       public Device(string path)
       {
-         /* safe file handle */
-         SafeFileHandle shandle;
-
          /* opens hid device file */
-         handle = Native.CreateFile(path,
+         var handle = Native.CreateFile(path,
              Native.GENERIC_READ | Native.GENERIC_WRITE,
              Native.FILE_SHARE_READ | Native.FILE_SHARE_WRITE,
              IntPtr.Zero, Native.OPEN_EXISTING, Native.FILE_FLAG_OVERLAPPED,
@@ -55,15 +53,16 @@ namespace UsbHidLib
          }
 
          /* build up safe file handle */
-         shandle = new SafeFileHandle(handle, false);
+         _shandle = new SafeFileHandle(handle, false);
 
          /* prepare stream - async */
-         _fileStream = new FileStream(shandle, FileAccess.ReadWrite,
-             32, true);
-
+         _fileStream = new FileStream(_shandle, FileAccess.ReadWrite, 64, true);
       }
 
-      /* write record */
+      /// <summary>
+      /// Write record.
+      /// </summary>
+      /// <param name="data">Data to write.</param>
       public void Write(byte[] data)
       {
          /* write some bytes */

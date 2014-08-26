@@ -15,7 +15,7 @@ namespace UsbHidLib
          /* hid device class guid */
          Guid gHid;
          /* list of device information */
-         List<Info> info = new List<Info>();
+         var info = new List<Info>();
 
          /* obtain hid guid */
          Native.HidD_GetHidGuid(out gHid);
@@ -35,9 +35,6 @@ namespace UsbHidLib
              index, ref iface))
          {
 
-            /* vid and pid */
-            short vid, pid;
-
             /* get device path */
             var path = GetPath(hInfoSet, ref iface);
 
@@ -53,10 +50,12 @@ namespace UsbHidLib
                /* get serial number */
                var serial = GetSerialNumber(handle);
                /* get vid and pid */
+               short vid;
+               short pid;
                GetVidPid(handle, out vid, out pid);
 
                /* build up a new element */
-               Info i = new Info(prod, serial, man, path, vid, pid);
+               var i = new Info(prod, serial, man, path, vid, pid);
                /* add to list */
                info.Add(i);
 

@@ -1,8 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using UsbHidLib;
 
 namespace UsbHidTest
@@ -19,8 +16,13 @@ namespace UsbHidTest
          using (var dev = new Device(devInfo.Path))
          {
             var data = new byte[5];
-            dev.Read(data);
-            Console.WriteLine(String.Join(" ", data));
+            //while (true)
+            {
+
+
+               dev.Read(data);
+               Console.WriteLine(String.Join(" ", data));
+            }
          }
       }
 

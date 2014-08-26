@@ -4,10 +4,34 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
+using Microsoft.Win32.SafeHandles;
 
 namespace UsbHidLib
 {
-   class Native
+
+   [StructLayout(LayoutKind.Sequential)]
+   internal struct HIDP_CAPS
+   {
+      public System.UInt16 Usage;					// USHORT
+      public System.UInt16 UsagePage;				// USHORT
+      public System.UInt16 InputReportByteLength;
+      public System.UInt16 OutputReportByteLength;
+      public System.UInt16 FeatureReportByteLength;
+      [MarshalAs(UnmanagedType.ByValArray, SizeConst = 17)]
+      public System.UInt16[] Reserved;				// USHORT  Reserved[17];			
+      public System.UInt16 NumberLinkCollectionNodes;
+      public System.UInt16 NumberInputButtonCaps;
+      public System.UInt16 NumberInputValueCaps;
+      public System.UInt16 NumberInputDataIndices;
+      public System.UInt16 NumberOutputButtonCaps;
+      public System.UInt16 NumberOutputValueCaps;
+      public System.UInt16 NumberOutputDataIndices;
+      public System.UInt16 NumberFeatureButtonCaps;
+      public System.UInt16 NumberFeatureValueCaps;
+      public System.UInt16 NumberFeatureDataIndices;
+   }
+
+   internal static class Native
    {
       /* invalid handle value */
       public static IntPtr INVALID_HANDLE_VALUE = new IntPtr(-1);
@@ -70,23 +94,36 @@ namespace UsbHidLib
 
       /* gets hid device attributes */
       [DllImport("hid.dll", SetLastError = true)]
-      public static extern Boolean HidD_GetAttributes(IntPtr hFile,
+      public static extern Boolean HidD_GetAttributes(SafeFileHandle hFile,
           ref HiddAttributtes attributes);
 
       /* gets usb manufacturer string */
       [DllImport("hid.dll", CharSet = CharSet.Auto, SetLastError = true)]
-      public static extern Boolean HidD_GetManufacturerString(IntPtr hFile,
+      public static extern Boolean HidD_GetManufacturerString(SafeFileHandle hFile,
           StringBuilder buffer, Int32 bufferLength);
 
       /* gets product string */
       [DllImport("hid.dll", CharSet = CharSet.Auto, SetLastError = true)]
-      public static extern Boolean HidD_GetProductString(IntPtr hFile,
+      public static extern Boolean HidD_GetProductString(SafeFileHandle hFile,
           StringBuilder buffer, Int32 bufferLength);
 
       /* gets serial number string */
       [DllImport("hid.dll", CharSet = CharSet.Auto, SetLastError = true)]
       internal static extern bool HidD_GetSerialNumberString(IntPtr hDevice,
           StringBuilder buffer, Int32 bufferLength);
+
+      [DllImport("hid.dll", SetLastError = true)]
+      internal static extern bool HidD_GetPreparsedData(
+          SafeFileHandle hObject,
+          ref IntPtr preparsedData);
+
+      [DllImport("hid.dll", SetLastError = true)]
+      internal static extern bool HidD_FreePreparsedData(ref IntPtr preparsedData);
+
+      [DllImport("hid.dll", SetLastError = true)]
+      private static extern int HidP_GetCaps(
+          IntPtr preparsedData,					// IN PHIDP_PREPARSED_DATA  PreparsedData,
+          ref HIDP_CAPS myPHIDP_CAPS);				// OUT PHIDP_CAPS  Capabilities
 
 
       #endregion
