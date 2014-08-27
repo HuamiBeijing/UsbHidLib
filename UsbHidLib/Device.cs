@@ -9,7 +9,7 @@ namespace UsbHidLib
    /// <summary>
    /// USB HID device simple access class.
    /// </summary>
-   public class Device : IDisposable
+   public sealed class Device : IDisposable
    {
 
       /// <summary>

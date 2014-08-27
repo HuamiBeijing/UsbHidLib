@@ -9,8 +9,11 @@ namespace UsbHidLib
 {
    public static class Browser
    {
-      /* browse all HID class devices */
-      public static List<Info> Browse()
+      /// <summary>
+      /// Browse all HID class devices.
+      /// </summary>
+      /// <returns>List of HID device infos.</returns>
+      public static IEnumerable<Info> Browse()
       {
          /* hid device class guid */
          Guid gHid;
