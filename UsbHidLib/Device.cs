@@ -1,21 +1,43 @@
 ﻿using System;
 using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
 using Microsoft.Win32.SafeHandles;
 
 namespace UsbHidLib
 {
+   /// <summary>
+   /// USB HID device simple access class.
+   /// </summary>
    public class Device : IDisposable
    {
 
-      /* device handle */
+      /// <summary>
+      /// Device handle for HID.
+      /// </summary>
       readonly SafeFileHandle _shandle;
 
-      /* stream */
+      /// <summary>
+      /// File stream opened using <see cref="_shandle"/>.
+      /// </summary>
       private FileStream _fileStream;
 
-      /* dispose */
+      private CancellationTokenSource _cancellationTokenSource;
+
+      private Task  _readerTask;
+
+      private Action<byte[]> _onRecievedAction;
+
+      /// <summary>
+      /// Dispose.
+      /// </summary>
       public void Dispose()
       {
+         if (_readerTask != null)
+         {
+            _cancellationTokenSource.Cancel();
+            _readerTask.Wait();
+         }
          /* deal with file stream */
          if (_fileStream != null)
          {
@@ -29,7 +51,10 @@ namespace UsbHidLib
          _shandle.Dispose();
       }
 
-      /* open hid device */
+      /// <summary>
+      /// Creates new Device.
+      /// </summary>
+      /// <param name="path">HID device path.</param>
       public Device(string path)
       {
          /* opens hid device file */
@@ -64,7 +89,7 @@ namespace UsbHidLib
          _fileStream.Flush();
       }
 
-      public ushort GetPreparsedPacketSize()
+      internal ushort GetPreparsedPacketSize()
       {
          IntPtr preparsed = IntPtr.Zero;
          if (!Native.HidD_GetPreparsedData(_shandle, ref preparsed))
@@ -79,8 +104,11 @@ namespace UsbHidLib
          return res;
       }
 
-      /* read record */
-      public void Read(byte[] data)
+      /// <summary>
+      /// Read record.
+      /// </summary>
+      /// <param name="data">Data to read.</param>
+      internal void Read(byte[] data)
       {
          /* get number of bytes */
          int n = 0, bytes = data.Length;
@@ -92,6 +120,45 @@ namespace UsbHidLib
             int rc = _fileStream.Read(data, n, bytes - n);
             /* update pointers */
             n += rc;
+         }
+      }
+
+      /// <summary>
+      /// Starts async reading.
+      /// </summary>
+      /// <param name="receiver">Readed data consumer.</param>
+      public void StartReading(Action<byte[]> receiver)
+      {
+         if (_readerTask != null)
+         {
+            return; // Already started.
+         }
+         _onRecievedAction = receiver;
+
+         _cancellationTokenSource = new CancellationTokenSource();
+         _readerTask = new Task(reader, _cancellationTokenSource.Token, TaskCreationOptions.LongRunning);
+         _readerTask.Start();
+      }
+
+      /// <summary>
+      /// Reader task.
+      /// </summary>
+      private void reader()
+      {
+         while (true)
+         {
+            if (_cancellationTokenSource.Token.IsCancellationRequested)
+            {
+               return;
+            }
+            var size = GetPreparsedPacketSize();
+            if (size == 0)
+            {
+               continue;
+            }
+            var data = new byte[size];
+            Read(data);
+            _onRecievedAction(data);
          }
       }
    }

@@ -15,19 +15,8 @@ namespace UsbHidTest
 
          using (var dev = new Device(devInfo.Path))
          {
-            
-            while (true)
-            {
-               var size = dev.GetPreparsedPacketSize();
-               if (size == 0)
-               {
-                  Console.Write(".");
-                  continue;
-               }
-               var data = new byte[size];
-               dev.Read(data);
-               Console.WriteLine(String.Join(" ", data));
-            }
+            dev.StartReading(d=>Console.WriteLine(String.Join(", ", d)));
+            Console.ReadKey();
          }
       }
 
